@@ -23,6 +23,8 @@ window.addEventListener("resize", function() {
 
 var canvas = document.getElementById("gameCanvas");
 var ctx = canvas.getContext("2d");
+    
+document.body.style.backgroundColor = "rgb(205,170,178)"; //205,17,178 is the midway point between teamGreens complimentary colour and teamRed's analogous colour
 
 // team variable stuff
     
@@ -54,6 +56,10 @@ var teamPurple = {
     name: 'Purple Team',
     color: 'rgb(230,100,230)'
 }
+var teamIndigo = {
+    name: 'Indigo Team',
+    color: 'rgb(200,15,200)'  // A complimentary colour to teamGreen's one
+}
 var teams = {
     teamNeutral: 0,
     teamRed: 0,
@@ -67,7 +73,7 @@ var Player = {
     team: teamGreen
 }
 var randomBot = {
-    team: teamRed
+    team: teamRed 
 }
 var circles = [];
     /*{x: 200, y: 200, radius: 50, name: 'Circle1', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []},
@@ -271,10 +277,10 @@ function createUnits(n, team, parent) {
 } // Creates the little orbiting thingys
 
 // Current map/difficulty/preset conditions:   (I should really implement levels lmao)
-createUnits(20, teamRed, circles[0]);
-createUnits(20, teamRed, circles[1]);
-createUnits(30, teamGreen, circles[2]);
-createUnits(20, teamRed, circles[3]);
+createUnits(20, randomBot.team, circles[0]);
+createUnits(20, randomBot.team, circles[1]);
+createUnits(30, Player.team, circles[2]);
+createUnits(20, randomBot.team, circles[3]);
 
 
 function randomBotTree() {
@@ -562,6 +568,28 @@ requestID = requestAnimationFrame(animationLoop);
 // paper scissors rock styled gameplay
 // Troops combine into bigger troops and you control them individually
 // music themed? etc weakness/attacks timed at a musical beat or themed - especially with pendulumn like motion
+    
+//Player testing questionnaire:
+  //Gameplay:
+    // From 1 to 10, how intuitive was the gameplay?
+    // How many times did you try it?
+    // Do you feel that you understand how to play from playing it even without a tutorial?
+    // Does the gameplay take a more aggressive or defensive stance?
+    // Between 14.27 and 86.11, how good is it?
+    // Did you notice any bugs?
+    // What can be done to make it better?
+    // Any ideas for possible features?
+  //Graphics:
+    // colours for teams
+    // background colours
+    // leaderboard bar
+    // gui?
+    // selected circle colours
+    // should there be an arrow showing selection
+    // what kinda graphics should I implement to better improve usability.
+  //Theme:
+    // what kinda setting
+    // what kinda story
     
 </script>
 </body>
