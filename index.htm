@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>Xenolithic Quest</title>
+</head>
 <body>
 <canvas id="gameCanvas" width="600" height="600"></canvas>
 <script>
@@ -21,6 +24,8 @@ window.addEventListener("resize", function() {
 var canvas = document.getElementById("gameCanvas");
 var ctx = canvas.getContext("2d");
 
+// team variable stuff
+    
 var teamNeutral = {
     name: 'Neutral Team',
     color: 'rgb(128,128,128)'
@@ -98,7 +103,7 @@ function createPlanets(n, teams) {
         }
         
     }
-}
+} // Creates non-overlapping random circles across the map
 
 createPlanets(10, 0)
     
@@ -115,17 +120,17 @@ function drawCircle(circle) {
     ctx.fillStyle = "black";
     ctx.fillText(circle.troops.length, circle.x, circle.y);
     ctx.stroke();
-}
-//circles.forEach(drawCircle);
+} // Draws circles
+//circles.forEach(drawCircle); 
 
-// Check if the user tapped the planet
+// Check if the user tapped a planet
 canvas.addEventListener("mousedown", checkHit);
 
 var selectedCircle = null;
 var prevSelectedCircle = null;
-var highlight = 0.8;
+var highlight = 0.8; // The ratio of how much darker the selected circle gets
     
-var isMouseDown = false; //user selection box
+var isMouseDown = false; //user selection box stuff incase I ever use it
 var startX, startY, endX, endY;
     
 function checkHit(e) {
@@ -190,6 +195,9 @@ function checkHit(e) {
           }
     }
 } //someplace, somewhere, a bug is crawling ;-; been there since the beginning
+    
+    
+    
 /*       //CLICK AND DRAG SELECTION BOX
 //user selection box:
 canvas.addEventListener("mousemove", function(e) {
@@ -233,15 +241,10 @@ function selectTroops() {
         }
     }
 }
-*/
-    
-// Ships
-// define the orbit circle
-// define an array to store the orbit circles
-var orbitCircles = [];
+*/       // Selection box experimental code; abit buggy and still undecided if it fits the gameplay
 
-// use a loop to create multiple orbit circles
-unitCounter = 0
+var orbitCircles = []; // Array of all troops
+unitCounter = 0 // ID's all troops, including the ones that spawn later on in the game
 function createUnits(n, team, parent) {
     for (var i = 0; i < n; i++) {
         unitCounter += 1;
@@ -265,13 +268,13 @@ function createUnits(n, team, parent) {
         orbitCircles.push(orbitCircle);
         orbitCircle.parentCircle.troops.push(orbitCircle);
     }
-}
-    
+} // Creates the little orbiting thingys
+
+// Current map/difficulty/preset conditions:   (I should really implement levels lmao)
 createUnits(20, teamRed, circles[0]);
 createUnits(20, teamRed, circles[1]);
 createUnits(30, teamGreen, circles[2]);
 createUnits(20, teamRed, circles[3]);
-
 
 
 function randomBotTree() {
@@ -302,15 +305,14 @@ function randomBotTree() {
         }
     }
     setTimeout(randomBotTree, 1500);
-}
+} //RandomBot philosophy: All units target 1 random unowned planet
 var target = {
     team: randomBot.team
-}
-setTimeout(randomBotTree, 5000); 
+} // Variable for the target planet for the randomBot 
+setTimeout(randomBotTree, 5000); // randomBot starts playing 5 seconds after the game loads, and checks its logic every 1.5 seconds
     
     
-    
-// function to draw the orbit circle
+
 function drawOrbitCircle(orbit) {
     if(!orbit) return;
     ctx.beginPath();
@@ -320,11 +322,10 @@ function drawOrbitCircle(orbit) {
     //ctx.lineWidth = circle.borderWidth/8;
     ctx.lineWidth = 0.1;
     ctx.stroke();
-}
+} // function to draw the orbit circle
     
 function drawLine(orbit) {
     if(!orbit) return;
-    // Draws line between orbitcircle and parent
     ctx.strokeStyle = orbit.parentCircle.team.color; 
     ctx.lineWidth = 0.1;
     if (orbit.movementState == "orbit" && orbit.team != orbit.parentCircle.team.color){
@@ -339,29 +340,27 @@ function drawLine(orbit) {
     ctx.moveTo(orbit.parentCircle.x, orbit.parentCircle.y);
     ctx.lineTo(orbit.x, orbit.y);
     ctx.stroke();
-}
+} // Draws line between orbitcircle and parent
     
 function drawLeadingBar(teams) {
     var totalTroops = 0;
     var teamRatios = {};
     for (team in teams) {
-        //console.log(`Team: ${team}, Count: ${teams[team]}`);
         totalTroops += teams[team];
     }
     for (team in teams) {
         teamRatios[team] = teams[team]/totalTroops;     
     }
-    // perhaps draw two circles either side to make it look like a nice bar
     var X = canvas.width/4;
     var startY = canvas.width/100; //should be var of height shaking my smh
     var endY = canvas.width/50;
     c = 1;
     for (teamName in teamRatios){   //bar doesn't start at 100% <-> doesn't show second colour
         var startX = X;
-        var lengthX = ((3*canvas.width/4) - X)*teamRatios[teamName];
+        var lengthX = ((3*canvas.width/4) - canvas.width/4)*teamRatios[teamName]; // x is variable doofus
         
         ctx.beginPath();
-        ctx.lineWidth = 6; //0.001 for better veiw of colour
+        ctx.lineWidth = 0.001; //0.001 for better veiw of colour
         ctx.fillStyle = teamCols[teamName]
         
         if (c == 1) {
@@ -378,21 +377,14 @@ function drawLeadingBar(teams) {
                 ctx.beginPath();
             }*/
         }
-        
-        if (c == 1) {
-            ctx.rect(startX, startY, lengthX, endY - startY);
-        } else {
-            ctx.rect(startX, startY, endX, endY - startY);
-        }
+        ctx.rect(startX, startY, lengthX, endY - startY);
         ctx.fill();
         ctx.stroke();
-        X = lengthX;//should be lengthX but I'll leave for now
-        c++;
-        
-            
+        X = lengthX + startX;
+        c++;         
     }
-}
-// update the position of the orbit circle in a loop
+} // Currently the team order is determined randomly (the one with the lowest ID troop is first) - possibly size or player first?
+    
 function generateTroops() {
     for (var i = 0; i < circles.length; i++) {
         if (circles[i].team == teamNeutral){
@@ -404,8 +396,8 @@ function generateTroops() {
         //console.log('Spawned unit ', orbitCircles[orbitCircles.length - 1].ID, ' on ', circles[i].name);
     }
     setTimeout(generateTroops, 3000); // call the function again after 3 second
-}
-setTimeout(generateTroops, 10000);
+} // Generates troops for all owned planets in unison every 1000/15 seconds
+setTimeout(generateTroops, 10000); // Initializes troop generation
 
 let requestID;
 function animationLoop() {
@@ -526,7 +518,7 @@ function animationLoop() {
 
 for (var i = 0; i < orbitCircles.length; i++) {
     drawOrbitCircle(orbitCircles[i]);
-} //initially draws orbiting circles
+} // Initially draws orbiting circles
 
 // Start the animation loop
 requestID = requestAnimationFrame(animationLoop);
@@ -552,6 +544,7 @@ requestID = requestAnimationFrame(animationLoop);
 // GUI for troops data etc (maybe for later with more advanced features)
 // select multiple planets - shift click?
 // If your troops orbit a nonowned planet - you cant control them - bug or feature? (Removed as bug, but would be cool to implement)
+// timer? to see if you can win faster?
     
 //IDEAS:
 // overlapping circles form one mass (no internal borders and wierd orbit for orbiting circles)
