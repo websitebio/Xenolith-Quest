@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="gameCanvas" width="600" height="600"></canvas>
+<script>
+// Setup
+// Get the canvas element
+var canvas = document.getElementById("gameCanvas");
+
+// Set the canvas dimensions to fill the entire viewport
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Listen for the window resize event
+window.addEventListener("resize", function() {
+    // Update the canvas dimensions when the event is fired
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+
+var canvas = document.getElementById("gameCanvas");
+var ctx = canvas.getContext("2d");
+
+var teamNeutral = {
+    name: 'Neutral Team',
+    color: 'rgb(128,128,128)'
+}
+var teamRed = {
+    name: 'Red Team',
+    color: 'rgb(210,20,60)'
+}
+var teamOrange = {
+    name: 'Orange Team',
+    color: 'rgb(240,125,0)' 
+}
+var teamYellow = {
+    name: 'Yellow Team',
+    color: 'rgb(255,223,0)'
+}
+var teamGreen = {
+    name: 'Green Team',
+    color: 'rgb(15,200,15)'
+}
+var teamBlue = {
+    name: 'Blue Team',
+    color: 'rgb(70,235,255)'
+}
+var teamPurple = {
+    name: 'Purple Team',
+    color: 'rgb(230,100,230)'
+}
+var teams = {
+    teamNeutral: 0,
+    teamRed: 0,
+    teamOrange: 0,
+    teamYellow: 0,
+    teamGreen: 0,
+    teamBlue: 0,
+    teamPurple: 0
+}
+var Player = {
+    team: teamGreen
+}
+var randomBot = {
+    team: teamRed
+}
+var circles = [];
+    /*{x: 200, y: 200, radius: 50, name: 'Circle1', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []},
+    {x: 50, y: 50, radius: 20, name: 'Circle2', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []},
+    {x: 400, y: 400, radius: 70, name: 'Circle3', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []}*/
+
+// Planets
+function createPlanets(n, teams) {
+    for (var i = 0; i < n; i++) {
+        var circle = {
+            x: Math.random() * canvas.width, 
+            y: Math.random() * canvas.height, 
+            radius: 25 + Math.random()*50, 
+            name: 'Circle'+i, 
+            team: teamNeutral, 
+            color: teamNeutral.color, 
+            originalBorderWidth: 0.1, 
+            troops: []
+        }
+        // add the orbit circle to the array    
+        circles.push(circle);
+    }
+}
+
+createPlanets(10, 0)
+    
+function drawCircle(circle) {
+    if(!circle) return;
+    ctx.beginPath();
+    ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
+    ctx.fillStyle = circle.color;
+    ctx.fill();
+    ctx.lineWidth = circle.borderWidth;
+    ctx.strokeStyle = "black";
+    ctx.font = circle.radius + "px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "black";
+    ctx.fillText(circle.troops.length, circle.x, circle.y);
+    ctx.stroke();
+}
+//circles.forEach(drawCircle);
+
+// Check if the user tapped the planet
+canvas.addEventListener("mousedown", checkHit);
+
+var selectedCircle = null;
+var prevSelectedCircle = null;
+var highlight = 0.8;
+    
+var isMouseDown = false; //user selection box
+var startX, startY, endX, endY;
+    
+function checkHit(e) {
+    var rect = canvas.getBoundingClientRect();
+    var xMouse = e.clientX - rect.left;     
+    var yMouse = e.clientY - rect.top;
+    
+    isMouseDown = true; //user selection box
+    startX = e.clientX;
+    startY = e.clientY;
+
+    for (var i = 0; i < circles.length; i++) {
+        var circle = circles[i];
+        var distance = Math.sqrt(Math.pow(xMouse - circle.x, 2) + Math.pow(yMouse - circle.y, 2));
+        if (distance < circle.radius) {
+           if (selectedCircle != null) {
+               selectedCircle.color = selectedCircle.originalColor; //originalColor
+               selectedCircle.borderWidth = selectedCircle.originalBorderWidth;
+               drawCircle(selectedCircle); 
+               prevSelectedCircle = selectedCircle
+               if (circle === selectedCircle) { // Deselect
+                   selectedCircle = null
+                   break;
+               }
+               // check if the player clicks on their own team:  if player.team == selectedCircle.team  etc
+               //selectedCircle.borderWidth = 4; //previously selected circle gets a smaller border, but alas a border
+            
+               // Selection animation (etc, second planet sends out pulse)
+               // generate path between planets, possible needs to intake place in orbit and map a route depending on both planets rotations - chasing algorithm? 
+               
+               
+               
+            }
+            selectedCircle = circle;
+            selectedCircle.originalColor = circle.color;
+            var color = selectedCircle.color;
+            color = color.replace('rgb(','').replace(')','').split(',');
+            color[0] = color[0]*highlight;
+            color[1] = color[1]*highlight;
+            color[2] = color[2]*highlight;
+            selectedCircle.color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+            selectedCircle.borderWidth = 8;
+            circles.forEach(drawCircle);
+            drawCircle(selectedCircle);
+            // VVV Changes parent circle for orbit VVV
+            if (prevSelectedCircle != null) {
+                if (prevSelectedCircle.team == Player.team) {
+                    for (var j = 0; j < orbitCircles.length; j++) {
+                        if (orbitCircles[j].team == prevSelectedCircle.team && orbitCircles[j].parentCircle == prevSelectedCircle) {
+                            orbitCircles[j].parentCircle.troops.splice(orbitCircles[j].parentCircle.troops.indexOf(orbitCircle), 1)
+                            orbitCircles[j].parentCircle = selectedCircle;
+                            orbitCircles[j].movementState = "Transfer"
+                            orbitCircles[j].orbitRadius = orbitCircles[j].parentCircle.radius + 25;
+                            drawOrbitCircle(orbitCircles[j]);
+                            //prevSelectedCircle = null
+                            //selectedCircle = null
+                        }
+                    }
+                }
+            }
+            break;
+          }
+    }
+}
+/*       //CLICK AND DRAG SELECTION BOX
+//user selection box:
+canvas.addEventListener("mousemove", function(e) {
+    if(isMouseDown) {
+        endX = e.clientX;
+        endY = e.clientY;
+        drawSelectionBox();
+    }
+});
+
+canvas.addEventListener("mouseup", function(e) {
+    isMouseDown = false;
+    selectTroops();
+});
+
+function drawSelectionBox() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    circles.forEach(drawCircle);
+    drawCircle(selectedCircle);
+    orbitCircles.forEach(drawOrbitCircle)
+    
+    ctx.beginPath();
+    ctx.rect(startX, startY, endX - startX, endY - startY);
+    ctx.lineWidth = 5;
+    ctx.fillStyle = 'rgb(100,200,200)' //colour isn't working
+    ctx.stroke();
+}
+
+var selectedTroops = [];
+function selectTroops() {
+    for(var i = 0; i < orbitCircles.length; i++) {
+        var x = orbitCircles[i].x;
+        var y = orbitCircles[i].y;
+        if(x > startX && x < endX && y > startY && y < endY && orbitCircles.team == Player.team) {
+            orbitCircles[i].selected = true;
+            selectedTroops.push(orbitCircles[i]);
+            orbitCircles.borderWidth = 5
+            console.log("TROOPS SELECTED!!!!")
+        } else {
+            continue;
+        }
+    }
+}
+*/
+    
+// Ships
+// define the orbit circle
+// define an array to store the orbit circles
+var orbitCircles = [];
+
+// use a loop to create multiple orbit circles
+unitCounter = 0
+function createUnits(n, team, parent) {
+    for (var i = 0; i < n; i++) {
+        unitCounter += 1;
+        orbitCircle = { //var
+            x: 150,
+            y: 150,
+            radius: 10+i/10,
+            angle: 0+i/5,
+            speed: 3,
+            orbitSpeed: 0.003+i/100,
+            parentCircle: parent, //circles[0]
+            team: team, //teamOrange
+            color: team.color,
+            movementState: "Orbit",
+            orbitRadius: parent.radius + 25,
+            ID: unitCounter
+        };
+        parent.team = orbitCircle.team;
+        parent.color = team.color;
+        // add the orbit circle to the array    
+        orbitCircles.push(orbitCircle);
+        orbitCircle.parentCircle.troops.push(orbitCircle);
+    }
+}
+    
+createUnits(20, teamRed, circles[0]);
+createUnits(20, teamRed, circles[1]);
+createUnits(30, teamGreen, circles[2]);
+createUnits(10, teamRed, circles[3]);
+
+
+
+function randomBotTree() {
+    // sees all circles
+    // attacks weakest circles
+    if (target.team == randomBot.team) {
+        targetCircles = []
+        for (var i = 0; i < circles.length; i++) {
+            if (circles[i].team == randomBot.team) {
+                continue;
+            }
+            targetCircles.push(circles[i])
+        }
+        if (targetCircles.length != 0) {
+        target = targetCircles[Math.floor(Math.random() * targetCircles.length)]
+        //console.log("The Random bot is Targetting: ", target.name)
+        } else {
+            console.log(randomBot.team.name, " has complete domination")
+        }
+    }
+    for (var i = 0; i < orbitCircles.length; i++) {
+        if (orbitCircles[i].team == randomBot.team) {
+            orbitCircles[i].parentCircle.troops.splice(orbitCircles[i].parentCircle.troops.indexOf(orbitCircles[i]), 1); 
+            orbitCircles[i].parentCircle = target;
+            orbitCircles[i].movementState = "Transfer";
+            orbitCircles[i].orbitRadius = orbitCircles[i].parentCircle.radius + 25;
+            drawOrbitCircle(orbitCircles[i]);
+        }
+    }
+    setTimeout(randomBotTree, 1500);
+}
+var target = {
+    team: randomBot.team
+}
+setTimeout(randomBotTree, 5000); 
+    
+    
+    
+// function to draw the orbit circle
+function drawOrbitCircle(orbit) {
+    if(!orbit) return;
+    ctx.beginPath();
+    ctx.arc(orbit.x, orbit.y, orbit.radius, 0, 2 * Math.PI);
+    ctx.fillStyle = orbit.color;
+    ctx.fill();
+    //ctx.lineWidth = circle.borderWidth/8;
+    ctx.lineWidth = 0.1;
+    ctx.stroke();
+}
+    
+function drawLeadingBar(teams) {
+    var totalTroops = 0;
+    var teamRatios = {};
+    for (team in teams) {
+        //console.log(`Team: ${team}, Count: ${teams[team]}`);
+        totalTroops += teams[team];
+    }
+    for (team in teams) {
+        teamRatios[team] = teams[team]/totalTroops;     
+    }
+    // perhaps draw two circles either side to make it look like a nice bar
+    var X = canvas.width/4;
+    var startY = canvas.width/100; //should be var of height shaking my smh
+    var endY = canvas.width/50;
+    c = 1;
+    for (teamName in teamRatios){   //bar doesn't start at 100% <-> doesn't show second colour
+        var startX = X;
+        var lengthX = ((3*canvas.width/4) - X)*teamRatios[teamName];
+        
+        ctx.beginPath();
+        ctx.lineWidth = 6; //0.001 for better veiw of colour
+        ctx.fillStyle = teamCols[teamName]
+        
+        if (c == 1) {
+            ctx.arc(canvas.width/4, (endY+startY)/2, (endY-startY)/2, 0, 2 * Math.PI);
+        }
+        
+        if (c == (Object.values(teamRatios).length)){
+            ctx.arc(3*canvas.width/4, (endY+startY)/2, (endY-startY)/2, 0, 2 * Math.PI);
+            if (X + lengthX < 3*canvas.width/4){
+                ctx.rect(X, startY, 3*canvas.width/4-X, endY - startY);
+                ctx.fillStyle = 'grey';
+                ctx.fill();
+                ctx.stroke();
+                ctx.beginPath();
+            }
+        }
+        
+        if (c == 1) {
+            ctx.rect(startX, startY, lengthX, endY - startY);
+        } else {
+            ctx.rect(startX, startY, endX, endY - startY);
+        }
+        ctx.fill();
+        ctx.stroke();
+        X = lengthX;//should be lengthX but I'll leave for now
+        c++;
+        
+            
+    }
+}
+
+// update the position of the orbit circle in a loop
+function generateTroops() {
+    for (var i = 0; i < circles.length; i++) {
+        if (circles[i].team == teamNeutral){
+            continue;
+        }
+        createUnits(1, circles[i].team, circles[i]);
+        orbitCircles[orbitCircles.length - 1].orbitSpeed += Math.random()*0.03;
+        orbitCircles[orbitCircles.length - 1].angle += Math.random()*360
+        //console.log('Spawned unit ', orbitCircles[orbitCircles.length - 1].ID, ' on ', circles[i].name);
+    }
+    setTimeout(generateTroops, 3000); // call the function again after 3 second
+}
+setTimeout(generateTroops, 10000);
+
+let requestID;
+function animationLoop() {
+    /*for (var i = 0; i < circles.length; i++) {
+        if (circles[i].team == teamNeutral){
+            continue;
+        }
+        createUnits(1, circles[i].team, circles[i]);
+        orbitCircles[orbitCircles.length - 1].orbitSpeed += Math.random()*0.03;
+        orbitCircles[orbitCircles.length - 1].angle += Math.random()*360
+        console.log('Spawned unit ', orbitCircles[orbitCircles.length - 1].ID, ' on ', circles[i].name);
+    }*/
+    //var teams = {teamNeutral: 0,teamRed: 0,teamOrange: 0,teamYellow: 0,teamGreen: 0,teamBlue: 0,teamPurple: 0}
+    teams = {}
+    teamCols = {}
+    for (var i = 0; i < orbitCircles.length; i++) {
+        var orbitCircle = orbitCircles[i];
+        
+        if (teams[orbitCircle.team.name]) { //counts number of troops per team
+            teams[orbitCircle.team.name]++;
+        } else {
+            teams[orbitCircle.team.name] = 1;
+        }  
+        if (!teamCols[orbitCircle.team.name]) { //counts number of troops per team
+            teamCols[orbitCircle.team.name] = orbitCircle.team.color;
+        }
+        
+        //Orbiting around a planet
+        if (orbitCircle.movementState === "Orbit") {
+            orbitCircle.x = orbitCircle.parentCircle.x + orbitCircle.orbitRadius * Math.cos(orbitCircle.angle);
+            orbitCircle.y = orbitCircle.parentCircle.y + orbitCircle.orbitRadius * Math.sin(orbitCircle.angle);
+            orbitCircle.angle += orbitCircle.orbitSpeed;
+        }
+        else if (orbitCircle.movementState === "Transfer") {
+            var xDistance = orbitCircle.parentCircle.x - orbitCircle.x;
+            var yDistance = orbitCircle.parentCircle.y - orbitCircle.y;
+            var distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+
+            // check if the distance is less than a certain threshold
+            if (distance < orbitCircle.parentCircle.radius+orbitCircle.radius) { //orbitCircle.orbitRadius
+                if (orbitCircle.parentCircle.team == orbitCircle.team) {
+                    orbitCircle.parentCircle.troops.push(orbitCircle)
+                }
+                if (orbitCircle.parentCircle.troops.length === 0) {
+                    orbitCircle.parentCircle.troops.push(orbitCircle)
+                    orbitCircle.parentCircle.team = orbitCircle.team
+                    orbitCircle.parentCircle.color = orbitCircle.color
+                    if (orbitCircle.parentCircle === selectedCircle) {
+                        selectedCircle.originalColor = orbitCircle.color;
+                        selectedCircle.color = orbitCircle.color;
+                    }
+                    //orbitCircle.parentCircle.color = orbitCircle.originalColor
+                }
+                if (orbitCircle.parentCircle.team != orbitCircle.team) { // UNTESTED, DONT KNOW IF IT WORKS
+                    orbitCircles.splice(orbitCircles.indexOf(orbitCircle.parentCircle.troops.pop()), 1) //removes a fighter 
+                }
+                orbitCircle.movementState = "Orbit"
+            } else {
+                // calculate the angle to the destination circle
+                var angle = Math.atan2(yDistance, xDistance);
+                // update the position of the orbit circle
+                orbitCircle.x += orbitCircle.speed * Math.cos(angle);
+                orbitCircle.y += orbitCircle.speed * Math.sin(angle);
+            }   
+            /*
+            var distance = Math.sqrt(Math.pow(xMouse - orbitCircle.parentCircle.x, 2) + Math.pow(yMouse - orbitCircle.parentCircle.y, 2));
+            if (distance < (orbitCircle.parentCircle.radius+orbitCircle.orbitRadius)) {
+                orbitCircle.movementState = "Orbit"
+            }  */
+        }
+        
+        //drawOrbitCircle(orbitCircles[i]);
+        
+        for (var j = i + 1; j < orbitCircles.length; j++) { //collision detection
+            var orbitCircle1 = orbitCircles[i];
+            var orbitCircle2 = orbitCircles[j];
+
+            // calculate the distance between the two orbiting circles
+            var distance = Math.sqrt(Math.pow(orbitCircle1.x - orbitCircle2.x, 2) + Math.pow(orbitCircle1.y - orbitCircle2.y, 2));
+
+            // check if the distance between the two orbiting circles is less than the sum of their radii
+            if (distance < orbitCircle1.radius + orbitCircle2.radius) {
+                if (orbitCircle1.team != orbitCircle2.team){
+                    //console.log(orbitCircle1.ID + orbitCircle1.team.name + " is touching " + orbitCircle2.ID + orbitCircle2.team.name);
+                    orbitCircles.splice(orbitCircles.indexOf(orbitCircle1), 1);
+                    orbitCircles.splice(orbitCircles.indexOf(orbitCircle2), 1);
+                    if (orbitCircle1.parentCircle) {
+                        orbitCircle1.parentCircle.troops.splice(orbitCircle1.parentCircle.troops.indexOf(orbitCircle1), 1)
+                    }
+                    if (orbitCircle2.parentCircle) {
+                        orbitCircle2.parentCircle.troops.splice(orbitCircle2.parentCircle.troops.indexOf(orbitCircle2), 1)
+                    }
+
+                }
+            }
+        }
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    circles.forEach(drawCircle);
+    drawCircle(selectedCircle);
+    orbitCircles.forEach(drawOrbitCircle);
+    drawLeadingBar(teams);
+    //requestID = requestAnimationFrame(animationLoop);
+    setTimeout(animationLoop, 1000/15);
+}
+
+for (var i = 0; i < orbitCircles.length; i++) {
+    drawOrbitCircle(orbitCircles[i]);
+}
+
+// Start the animation loop
+requestID = requestAnimationFrame(animationLoop);
+    
+    
+//TODO:
+// select one and select another to transfer selected planets units (currently a bit iffy)
+// incorrect number of troops showing being displayed on planet
+    // Instances: after combat   (units seem to destroy one from touching the planet and one again from orbit)
+    
+//non-urgent:
+// select multiple planets - shift click?
+// troop selection is g litchy
+// winner screen
+// main menu system
+// customisation 
+// maps / leveling system or procedual generation
+// ai systems:
+    // Offensive Ai system
+        // inputs:  troop counts, distance to planets
+// have enemy bases spawn at the opposite side of the map
+// fix the bar: correct colours for any faction, and circles on either side
+// graphics for the planets/troops and background
+// GUI for troops data etc (maybe for later with more advanced features)
+// select multiple planets - shift click?
+// If your troops orbit a nonowned planet - you cant control them - bug or feature?
+    
+//IDEAS:
+// overlapping circles form one mass (no internal borders and wierd orbit for orbiting circles)
+// moving planets
+// gravity
+// different factions have different orbiting patterns
+// Curve when orbiting circles leave planet or arrive for smooth transfers
+// accurate orbits depending on how big a planet (currently its just 25 + radius, but geostationary orbits have a set amount)
+// Troop ideas: one that takes out 2 enemy ships but deals little dmg to planets, one that travels fast  but deals less dmg, one that travels slow but deals lots of dmg etc, maybe a missile silo you build on a planet that deals no dmg to ships but large dmg against planets.
+// multiplayer
+    
+//Alternate ideas:
+// paper scissors rock styled gameplay
+// Troops combine into bigger troops and you control them individually
+    
+</script>
+</body>
+</html>
+
