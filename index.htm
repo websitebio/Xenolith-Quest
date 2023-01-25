@@ -6,7 +6,7 @@
 // Setup
 // Get the canvas element
 var canvas = document.getElementById("gameCanvas");
-
+ 
 // Set the canvas dimensions to fill the entire viewport
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -78,12 +78,25 @@ function createPlanets(n, teams) {
             radius: 25 + Math.random()*50, 
             name: 'Circle'+i, 
             team: teamNeutral, 
-            color: teamNeutral.color, 
+            color: teamNeutral.color,  
             originalBorderWidth: 0.1, 
             troops: []
         }
         // add the orbit circle to the array    
-        circles.push(circle);
+        var overlapping = false;
+        for (var i = 0; i < circles.length; i++) {
+            var distance = Math.sqrt(Math.pow(circle.x - circles[i].x, 2) + Math.pow(circle.y - circles[i].y, 2));
+            if (distance < circle.radius + circles[i].radius) {
+                overlapping = true;
+                break;
+            }
+        }
+        if (!overlapping) {
+            circles.push(circle);
+        } else {
+            i -= 1;
+        }
+        
     }
 }
 
@@ -176,7 +189,7 @@ function checkHit(e) {
             break;
           }
     }
-}
+} //someplace, somewhere, a bug is crawling ;-; been there since the beginning
 /*       //CLICK AND DRAG SELECTION BOX
 //user selection box:
 canvas.addEventListener("mousemove", function(e) {
@@ -257,7 +270,7 @@ function createUnits(n, team, parent) {
 createUnits(20, teamRed, circles[0]);
 createUnits(20, teamRed, circles[1]);
 createUnits(30, teamGreen, circles[2]);
-createUnits(10, teamRed, circles[3]);
+createUnits(20, teamRed, circles[3]);
 
 
 
@@ -309,6 +322,25 @@ function drawOrbitCircle(orbit) {
     ctx.stroke();
 }
     
+function drawLine(orbit) {
+    if(!orbit) return;
+    // Draws line between orbitcircle and parent
+    ctx.strokeStyle = orbit.parentCircle.team.color; 
+    ctx.lineWidth = 0.1;
+    if (orbit.movementState == "orbit" && orbit.team != orbit.parentCircle.team.color){
+        ctx.lineWidth = 10;
+        ctx.strokeStyle = 'rgb(0,0,0)';
+    }
+    if (orbit.team == randomBot.team) {
+        ctx.strokeStyle = 'rgb(0,0,0)';
+    }
+    
+    ctx.beginPath();
+    ctx.moveTo(orbit.parentCircle.x, orbit.parentCircle.y);
+    ctx.lineTo(orbit.x, orbit.y);
+    ctx.stroke();
+}
+    
 function drawLeadingBar(teams) {
     var totalTroops = 0;
     var teamRatios = {};
@@ -338,13 +370,13 @@ function drawLeadingBar(teams) {
         
         if (c == (Object.values(teamRatios).length)){
             ctx.arc(3*canvas.width/4, (endY+startY)/2, (endY-startY)/2, 0, 2 * Math.PI);
-            if (X + lengthX < 3*canvas.width/4){
+            /*if (X + lengthX < 3*canvas.width/4){ //it was meant to hide the bug, not become one!
                 ctx.rect(X, startY, 3*canvas.width/4-X, endY - startY);
                 ctx.fillStyle = 'grey';
                 ctx.fill();
                 ctx.stroke();
                 ctx.beginPath();
-            }
+            }*/
         }
         
         if (c == 1) {
@@ -360,7 +392,6 @@ function drawLeadingBar(teams) {
             
     }
 }
-
 // update the position of the orbit circle in a loop
 function generateTroops() {
     for (var i = 0; i < circles.length; i++) {
@@ -407,6 +438,16 @@ function animationLoop() {
             orbitCircle.x = orbitCircle.parentCircle.x + orbitCircle.orbitRadius * Math.cos(orbitCircle.angle);
             orbitCircle.y = orbitCircle.parentCircle.y + orbitCircle.orbitRadius * Math.sin(orbitCircle.angle);
             orbitCircle.angle += orbitCircle.orbitSpeed;
+            /* if (orbitCircle.parentCircle.team != orbitCircle.team) { was going to make xenoliths dark, but transfer ones are too which turn the planets dark                
+                var color = orbitCircle.color;
+                color = color.replace('rgb(','').replace(')','').split(',');
+                color[0] = color[0]*0.2;
+                color[1] = color[1]*0.2;
+                color[2] = color[2]*0.2;
+                selectedCircle.color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+            } else {
+                orbitCircle.color = orbitCircle.parentCircle.color
+            }*/
         }
         else if (orbitCircle.movementState === "Transfer") {
             var xDistance = orbitCircle.parentCircle.x - orbitCircle.x;
@@ -461,18 +502,20 @@ function animationLoop() {
                     //console.log(orbitCircle1.ID + orbitCircle1.team.name + " is touching " + orbitCircle2.ID + orbitCircle2.team.name);
                     orbitCircles.splice(orbitCircles.indexOf(orbitCircle1), 1);
                     orbitCircles.splice(orbitCircles.indexOf(orbitCircle2), 1);
-                    if (orbitCircle1.parentCircle) {
+                    if (orbitCircle1.parentCircle && orbitCircle1.movementState == "Orbit") {
                         orbitCircle1.parentCircle.troops.splice(orbitCircle1.parentCircle.troops.indexOf(orbitCircle1), 1)
                     }
-                    if (orbitCircle2.parentCircle) {
+                    if (orbitCircle2.parentCircle && orbitCircle2.movementState == "Orbit") {
                         orbitCircle2.parentCircle.troops.splice(orbitCircle2.parentCircle.troops.indexOf(orbitCircle2), 1)
                     }
 
                 }
             }
         }
-    }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    } //orbiting circle movement logic
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+    orbitCircles.forEach(drawLine)
     circles.forEach(drawCircle);
     drawCircle(selectedCircle);
     orbitCircles.forEach(drawOrbitCircle);
@@ -483,7 +526,7 @@ function animationLoop() {
 
 for (var i = 0; i < orbitCircles.length; i++) {
     drawOrbitCircle(orbitCircles[i]);
-}
+} //initially draws orbiting circles
 
 // Start the animation loop
 requestID = requestAnimationFrame(animationLoop);
@@ -491,8 +534,7 @@ requestID = requestAnimationFrame(animationLoop);
     
 //TODO:
 // select one and select another to transfer selected planets units (currently a bit iffy)
-// incorrect number of troops showing being displayed on planet
-    // Instances: after combat   (units seem to destroy one from touching the planet and one again from orbit)
+
     
 //non-urgent:
 // select multiple planets - shift click?
@@ -509,7 +551,7 @@ requestID = requestAnimationFrame(animationLoop);
 // graphics for the planets/troops and background
 // GUI for troops data etc (maybe for later with more advanced features)
 // select multiple planets - shift click?
-// If your troops orbit a nonowned planet - you cant control them - bug or feature?
+// If your troops orbit a nonowned planet - you cant control them - bug or feature? (Removed as bug, but would be cool to implement)
     
 //IDEAS:
 // overlapping circles form one mass (no internal borders and wierd orbit for orbiting circles)
@@ -520,10 +562,13 @@ requestID = requestAnimationFrame(animationLoop);
 // accurate orbits depending on how big a planet (currently its just 25 + radius, but geostationary orbits have a set amount)
 // Troop ideas: one that takes out 2 enemy ships but deals little dmg to planets, one that travels fast  but deals less dmg, one that travels slow but deals lots of dmg etc, maybe a missile silo you build on a planet that deals no dmg to ships but large dmg against planets.
 // multiplayer
-    
+// elements to make the gameplay more intuitive:
+// level editor (simply just click to place or remove circles, and a button to save and load (and a file that saves/loads))
+
 //Alternate ideas:
 // paper scissors rock styled gameplay
 // Troops combine into bigger troops and you control them individually
+// music themed? etc weakness/attacks timed at a musical beat or themed - especially with pendulumn like motion
     
 </script>
 </body>
