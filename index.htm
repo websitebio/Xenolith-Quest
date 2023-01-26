@@ -79,14 +79,17 @@ var circles = [];
     /*{x: 200, y: 200, radius: 50, name: 'Circle1', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []},
     {x: 50, y: 50, radius: 20, name: 'Circle2', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []},
     {x: 400, y: 400, radius: 70, name: 'Circle3', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []}*/
+var GAMEOVER = false;
+var CONFET = false
 
 // Planets
 function createPlanets(n, teams) {
     for (var i = 0; i < n; i++) {
+        rad = 25 + Math.random()*50
         var circle = {
-            x: Math.random() * canvas.width, 
-            y: Math.random() * canvas.height, 
-            radius: 25 + Math.random()*50, 
+            radius: rad, 
+            x: (Math.random() * (canvas.width-rad*1))+rad/2, 
+            y: (Math.random() * (canvas.height-rad*1))+rad/2, 
             name: 'Circle'+i, 
             team: teamNeutral, 
             color: teamNeutral.color,  
@@ -101,6 +104,12 @@ function createPlanets(n, teams) {
                 overlapping = true;
                 break;
             }
+            pad = rad*2
+            //console.log(circle.y, (canvas.height-pad))
+            if (circle.x < pad || circle.y < pad || circle.x > canvas.width-pad || circle.y > canvas.height-pad) {
+                overlapping = true;
+                break;
+            }   
         }
         if (!overlapping) {
             circles.push(circle);
@@ -110,8 +119,6 @@ function createPlanets(n, teams) {
         
     }
 } // Creates non-overlapping random circles across the map
-
-createPlanets(10, 0)
     
 function drawCircle(circle) {
     if(!circle) return;
@@ -181,6 +188,9 @@ function checkHit(e) {
             selectedCircle.borderWidth = 8;
             circles.forEach(drawCircle);
             drawCircle(selectedCircle);
+            
+            //console.log(selectedCircle.x, selectedCircle.y, "   Canvas:  ", canvas.width, canvas.height, "  Circle rad: ", selectedCircle.radius)
+            
             // VVV Changes parent circle for orbit VVV
             if (prevSelectedCircle != null) {
                 if (prevSelectedCircle.team == Player.team) {
@@ -277,11 +287,12 @@ function createUnits(n, team, parent) {
 } // Creates the little orbiting thingys
 
 // Current map/difficulty/preset conditions:   (I should really implement levels lmao)
-createUnits(20, randomBot.team, circles[0]);
-createUnits(20, randomBot.team, circles[1]);
+createPlanets(10, 0)
+createUnits(30, randomBot.team, circles[0]);
+createUnits(40, randomBot.team, circles[1]);
 createUnits(30, Player.team, circles[2]);
-createUnits(20, randomBot.team, circles[3]);
-
+createUnits(5, randomBot.team, circles[5]);
+createUnits(10, Player.team, circles[7]);
 
 function randomBotTree() {
     // sees all circles
@@ -334,6 +345,16 @@ function drawLine(orbit) {
     if(!orbit) return;
     ctx.strokeStyle = orbit.parentCircle.team.color; 
     ctx.lineWidth = 0.1;
+    /*if (GAMEOVER == true) {
+        if (Player.team == Object.values(teams)[0]) {
+            ctx.strokeStyle = "RGB(255,215,0)";   
+            ctx.strokeStyle = "RGB(255,223,0)"; 
+            ctx.strokeStyle = "RGB(218,165,32)"; 
+        } else {
+            ctx.strokeStyle = ; 
+            ctx.lineWidth = 2;
+        }
+    } */  //stroke style doesn't change the outline colour
     if (orbit.movementState == "orbit" && orbit.team != orbit.parentCircle.team.color){
         ctx.lineWidth = 10;
         ctx.strokeStyle = 'rgb(0,0,0)';
@@ -511,16 +532,97 @@ function animationLoop() {
             }
         }
     } //orbiting circle movement logic
-    
+            
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
     orbitCircles.forEach(drawLine)
     circles.forEach(drawCircle);
     drawCircle(selectedCircle);
     orbitCircles.forEach(drawOrbitCircle);
     drawLeadingBar(teams);
+    
+    if (Object.keys(teams).length == 1 && GAMEOVER == false) {
+        dbt = 0
+        for (var i = 0; i < circles.length; i++) {
+            if (circles[i].team.name != Object.keys(teams)[0]){
+                console.log(circles[i].team.name, Object.keys(teams)[0])
+                dbt ++; 
+            }
+        }
+        if (dbt == 0) {
+            //console.log("Team ", Object.keys(teams)[0], " wins!")
+            GAMEOVER == true
+            if (Player.team.name == Object.keys(teams)[0]) {
+                if (CONFET == false) {
+                    createConfetti()
+                    CONFET = true;
+                } else {
+                    animateConfetti();
+                    animateWords();
+                }
+            }
+        }
+    }
+
     //requestID = requestAnimationFrame(animationLoop);
     setTimeout(animationLoop, 1000/15);
 }
+
+function createConfetti() {
+    // create an array to hold the confetti particles
+    confetti = [];
+    // function to create a new confetti particle
+    function ConfettiParticle() {
+        this.x = Math.random() * canvas.width;
+        this.y = 0;
+        this.radius = Math.random() * 10 + 5;
+        this.color = "rgb(" + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + ")";
+        this.vx = Math.random() * 2 - 1;
+        this.vy = Math.random() * 10 + 5;
+    }
+
+    // create a new confetti particle and add it to the array
+    for (var i = 0; i < 500; i++) {  // quantity of confetti
+        confetti.push(new ConfettiParticle());
+    }
+    // animation loop to move and draw the confetti
+}
+
+wordY = 0
+function animateWords() {
+    ctx.beginPath();
+    ctx.strokeStyle = "black";
+    ctx.font = canvas.width*(0.15) + "px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "black";
+    if (Player.team.name == Object.keys(teams)[0]) {
+        ctx.fillText("YOU WIN!!!", canvas.width/2, wordY);
+    } else {
+        ctx.fillText(Object.keys(teams)[0] + "Win", canvas.width/2, wordY);
+    }
+    
+    wordY += 5;
+    if (wordY > canvas.height) {
+        wordY = 0;
+    }
+    ctx.stroke();
+    console.log(3)
+}
+function animateConfetti() {
+    for (var i = 0; i < confetti.length; i++) {
+        var p = confetti[i];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y > canvas.height) {
+            p.y = 0;
+        }
+        ctx.stroke();
+    }
+}
+
 
 for (var i = 0; i < orbitCircles.length; i++) {
     drawOrbitCircle(orbitCircles[i]);
@@ -590,7 +692,10 @@ requestID = requestAnimationFrame(animationLoop);
   //Theme:
     // what kinda setting
     // what kinda story
-    
+
+//feedback:
+    //clunky
+    //red faster?
 </script>
 </body>
 </html>
