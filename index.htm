@@ -381,7 +381,7 @@ function drawLeadingBar(teams) {
     }
     var X = canvas.width/4;
     var startY = BARY; //should be var of height shaking my smh
-    var endY = BARY+canvas.height/50;
+    var endY = BARY+canvas.height/100;
     c = 1;
     for (teamName in teamRatios){   //bar doesn't start at 100% <-> doesn't show second colour
         var startX = X;
@@ -540,7 +540,7 @@ function animationLoop() {
     drawCircle(selectedCircle);
     orbitCircles.forEach(drawOrbitCircle);
     drawLeadingBar(teams);
-    menuButton();
+    //menuButton();
     
     if (Object.keys(teams).length == 1 && GAMEOVER == false) {
         dbt = 0
