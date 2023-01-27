@@ -540,7 +540,7 @@ function animationLoop() {
     drawCircle(selectedCircle);
     orbitCircles.forEach(drawOrbitCircle);
     drawLeadingBar(teams);
-    //menuButton();
+    menuButton();
     
     if (Object.keys(teams).length == 1 && GAMEOVER == false) {
         dbt = 0
@@ -627,7 +627,7 @@ function popUpBox(x, y, width, height, radius) {
     padding = 10;
     ctx.beginPath();
     ctx.fillStyle = "RGB(218,165,32)";
-    ctx.roundRect(x-padding/2,y-padding/2,width+padding,height+padding,radius/0.9) //Border //radius itl be increase by the ratio the dimensions are
+    ctx.roundRect(x-padding/2,y-padding/2,width+padding,height+padding,radius/0.9) //Border //radius it'll be increase by the ratio the dimensions are
     ctx.fill()
     ctx.beginPath();
     ctx.fillStyle = "RGB(37,200,189)";
@@ -639,27 +639,27 @@ function popUpBox(x, y, width, height, radius) {
 requestID = requestAnimationFrame(animationLoop);
 
 function menuButton(){
-    marg = 50
+    var M = 0
     var x = 46*canvas.width/50
     var y = BARY
     var wid = canvas.width/30
     var hei = canvas.height/20
-    popUpBox(x, y, wid, hei, 0)
-    ctx.beginPath();
-    for (var i = 1; i < 10; i++); {
-        console.log(i)
-        ctx.moveTo(x+marg, BARY+ i *hei/4); 
-        ctx.lineTo(x+wid-marg, BARY+ i *hei/4);
-    }
+    popUpBox(x, y, wid, hei, 10)
     ctx.strokeStyle = "RGB(17,120,80)" 
-    ctx.stroke();
+    for (var i = 1; i < 4; i++) {
+        console.log(BARY+ i *hei/4)
+        ctx.beginPath();
+        ctx.moveTo(x+M, BARY+ i *hei/4); 
+        ctx.lineTo(x+wid-M, BARY+ i *hei/4);
+        ctx.stroke();
+    };  
 }
-    
+   
 function game(){
     canvas.addEventListener("mousedown", checkHit);
     createPlanets(10, 0)
-    createUnits(50, randomBot.team, circles[0]);
-    createUnits(50, randomBot.team, circles[2]);
+    createUnits(20, randomBot.team, circles[0]);
+    createUnits(20, randomBot.team, circles[2]);
     createUnits(10, Player.team, circles[1]);
     setTimeout(randomBotTree, 5000); // randomBot starts playing 
     setTimeout(generateTroops, 10000); // Initializes troop generation
@@ -692,6 +692,7 @@ game()
 // If your troops orbit a nonowned planet - you cant control them - bug or feature? (Removed as bug, but would be cool to implement)
 // timer? to see if you can win faster?
 // ctx draws so many things seperately - maybe combine the code?
+// be able to lay a roadblock of troops
     
 //IDEAS:
 // overlapping circles form one mass (no internal borders and wierd orbit for orbiting circles)
