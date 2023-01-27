@@ -95,6 +95,11 @@ var GAMEOVER = false;
 var CONFET = false
 var BARY = canvas.height/35
 var SCALE = 0.3
+var planets_genned = 50
+if (canvas.width < 600) {
+    SCALE = 0.6
+    planets_genned = 10
+}
 
 // Planets
 function createPlanets(n, teams) {
@@ -670,7 +675,7 @@ function menuButton(){
    
 function game(){
     canvas.addEventListener("mousedown", checkHit);
-    createPlanets(50, 0)
+    createPlanets(planets_genned, 0)
     //createUnits(20, randomBot1.team, circles[0]);
     //createUnits(20, randomBot1.team, circles[1]);
     createUnits(10, Player.team, circles[1]);
