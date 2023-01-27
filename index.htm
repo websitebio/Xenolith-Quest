@@ -660,7 +660,7 @@ function game(){
     createPlanets(10, 0)
     createUnits(50, randomBot.team, circles[0]);
     createUnits(50, randomBot.team, circles[2]);
-    createUnits(20, Player.team, circles[1]);
+    createUnits(10, Player.team, circles[1]);
     setTimeout(randomBotTree, 5000); // randomBot starts playing 
     setTimeout(generateTroops, 10000); // Initializes troop generation
     for (var i = 0; i < orbitCircles.length; i++) {
