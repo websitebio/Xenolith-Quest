@@ -81,6 +81,7 @@ var circles = [];
     {x: 400, y: 400, radius: 70, name: 'Circle3', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []}*/
 var GAMEOVER = false;
 var CONFET = false
+var BARY = canvas.height/35
 
 // Planets
 function createPlanets(n, teams) {
@@ -100,7 +101,7 @@ function createPlanets(n, teams) {
         var overlapping = false;
         for (var i = 0; i < circles.length; i++) {
             var distance = Math.sqrt(Math.pow(circle.x - circles[i].x, 2) + Math.pow(circle.y - circles[i].y, 2));
-            if (distance < circle.radius + circles[i].radius) {
+            if (distance < circle.radius + circles[i].radius + canvas.width/20) { //so they arn't touching and so theres some distance
                 overlapping = true;
                 break;
             }
@@ -137,7 +138,7 @@ function drawCircle(circle) {
 //circles.forEach(drawCircle); 
 
 // Check if the user tapped a planet
-canvas.addEventListener("mousedown", checkHit);
+//canvas.addEventListener("mousedown", checkHit);
 
 var selectedCircle = null;
 var prevSelectedCircle = null;
@@ -287,12 +288,12 @@ function createUnits(n, team, parent) {
 } // Creates the little orbiting thingys
 
 // Current map/difficulty/preset conditions:   (I should really implement levels lmao)
-createPlanets(10, 0)
+/*createPlanets(10, 0)
 createUnits(30, randomBot.team, circles[0]);
 createUnits(40, randomBot.team, circles[1]);
 createUnits(30, Player.team, circles[2]);
 createUnits(5, randomBot.team, circles[5]);
-createUnits(10, Player.team, circles[7]);
+createUnits(10, Player.team, circles[7]);*/
 
 function randomBotTree() {
     // sees all circles
@@ -326,7 +327,7 @@ function randomBotTree() {
 var target = {
     team: randomBot.team
 } // Variable for the target planet for the randomBot 
-setTimeout(randomBotTree, 5000); // randomBot starts playing 5 seconds after the game loads, and checks its logic every 1.5 seconds
+// setTimeout(randomBotTree, 5000); // randomBot starts playing 5 seconds after the game loads, and checks its logic every 1.5 seconds
     
     
 
@@ -379,8 +380,8 @@ function drawLeadingBar(teams) {
         teamRatios[team] = teams[team]/totalTroops;     
     }
     var X = canvas.width/4;
-    var startY = canvas.width/100; //should be var of height shaking my smh
-    var endY = canvas.width/50;
+    var startY = BARY; //should be var of height shaking my smh
+    var endY = BARY+canvas.height/50;
     c = 1;
     for (teamName in teamRatios){   //bar doesn't start at 100% <-> doesn't show second colour
         var startX = X;
@@ -424,7 +425,7 @@ function generateTroops() {
     }
     setTimeout(generateTroops, 3000); // call the function again after 3 second
 } // Generates troops for all owned planets in unison every 1000/15 seconds
-setTimeout(generateTroops, 10000); // Initializes troop generation
+//setTimeout(generateTroops, 10000); // Initializes troop generation
 
 let requestID;
 function animationLoop() {
@@ -539,6 +540,7 @@ function animationLoop() {
     drawCircle(selectedCircle);
     orbitCircles.forEach(drawOrbitCircle);
     drawLeadingBar(teams);
+    menuButton();
     
     if (Object.keys(teams).length == 1 && GAMEOVER == false) {
         dbt = 0
@@ -605,7 +607,6 @@ function animateWords() {
         wordY = 0;
     }
     ctx.stroke();
-    console.log(3)
 }
 function animateConfetti() {
     for (var i = 0; i < confetti.length; i++) {
@@ -622,16 +623,53 @@ function animateConfetti() {
         ctx.stroke();
     }
 }
-
-
-for (var i = 0; i < orbitCircles.length; i++) {
-    drawOrbitCircle(orbitCircles[i]);
-} // Initially draws orbiting circles
-
+function popUpBox(x, y, width, height, radius) {
+    padding = 10;
+    ctx.beginPath();
+    ctx.fillStyle = "RGB(218,165,32)";
+    ctx.roundRect(x-padding/2,y-padding/2,width+padding,height+padding,radius/0.9) //Border //radius itl be increase by the ratio the dimensions are
+    ctx.fill()
+    ctx.beginPath();
+    ctx.fillStyle = "RGB(37,200,189)";
+    ctx.roundRect(x,y,width,height,radius) //Box background
+    ctx.fill()
+    ctx.stroke();
+} //popUpBox(canvas.width/4, canvas.height/4, canvas.width/3, canvas.height/3)
 // Start the animation loop
 requestID = requestAnimationFrame(animationLoop);
+
+function menuButton(){
+    marg = 50
+    var x = 46*canvas.width/50
+    var y = BARY
+    var wid = canvas.width/30
+    var hei = canvas.height/20
+    popUpBox(x, y, wid, hei, 0)
+    ctx.beginPath();
+    for (var i = 1; i < 10; i++); {
+        console.log(i)
+        ctx.moveTo(x+marg, BARY+ i *hei/4); 
+        ctx.lineTo(x+wid-marg, BARY+ i *hei/4);
+    }
+    ctx.strokeStyle = "RGB(17,120,80)" 
+    ctx.stroke();
+}
     
-    
+function game(){
+    canvas.addEventListener("mousedown", checkHit);
+    createPlanets(10, 0)
+    createUnits(50, randomBot.team, circles[0]);
+    createUnits(50, randomBot.team, circles[2]);
+    createUnits(20, Player.team, circles[1]);
+    setTimeout(randomBotTree, 5000); // randomBot starts playing 
+    setTimeout(generateTroops, 10000); // Initializes troop generation
+    for (var i = 0; i < orbitCircles.length; i++) {
+        drawOrbitCircle(orbitCircles[i]);
+    } // Initially draws orbiting circles
+    requestID = requestAnimationFrame(animationLoop); // Begins animation loop
+}
+
+game()
 //TODO:
 // select one and select another to transfer selected planets units (currently a bit iffy)
 
@@ -653,6 +691,7 @@ requestID = requestAnimationFrame(animationLoop);
 // select multiple planets - shift click?
 // If your troops orbit a nonowned planet - you cant control them - bug or feature? (Removed as bug, but would be cool to implement)
 // timer? to see if you can win faster?
+// ctx draws so many things seperately - maybe combine the code?
     
 //IDEAS:
 // overlapping circles form one mass (no internal borders and wierd orbit for orbiting circles)
