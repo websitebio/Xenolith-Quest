@@ -99,8 +99,8 @@ var planets_genned = 50
 var SHOWMENU = false
 
 if (canvas.width < 800) {
-    SCALE = 5/3*0.35
-    planets_genned = 30
+    SCALE = 5/2*0.35
+    planets_genned = 20
 }
 
 // Planets
@@ -759,8 +759,27 @@ function menu(){
     
     
     // entry field
-    
-    
+    ctx.beginPath()
+    ctx.fillStyle = "RGB(8,60,8)";
+    ctx.roundRect(menuButton.x-4.5*menuButton.wid,BARY+3*menuButton.y+menuButton.hei*6,menuButton.wid*5,hei*2/3,20)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.font = canvas.width/60 + "px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "RGB(0,0,0)";
+    ctx.fillText("Host a Game", menuButton.x-4.5*menuButton.wid+menuButton.wid*5/2, BARY+3*menuButton.y+menuButton.hei*6+hei*3/6);
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.fillStyle = "RGB(30,160,30)"
+    ctx.roundRect(menuButton.x-4.5*menuButton.wid,BARY+3*menuButton.y+menuButton.hei*7.5,menuButton.wid*5,hei*2/3,20)
+    ctx.fill()  
+    ctx.stroke()    
+    ctx.beginPath()
+    ctx.font = canvas.width/80 + "px Arial italic";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "RGB(0,0,0)";
+    ctx.fillText("Type code here to join a game", menuButton.x-4.5*menuButton.wid+menuButton.wid*5/2, BARY+3*menuButton.y+menuButton.hei*7.5+hei*3/6);
+    ctx.stroke()
 
     
     ctx.lineWidth = 0.1
