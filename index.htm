@@ -46,7 +46,7 @@ var teamYellow = {
 }
 var teamGreen = {
     name: 'Green Team',
-    color: 'rgb(15,200,15)'
+    color: 'rgb(42,255,42)'     //'rgb(15,200,15)'
 }
 var teamBlue = {
     name: 'Blue Team',
@@ -94,11 +94,13 @@ var circles = [];
 var GAMEOVER = false;
 var CONFET = false
 var BARY = canvas.height/35
-var SCALE = 0.3
+var SCALE = 0.35
 var planets_genned = 50
-if (canvas.width < 1000) {
-    SCALE = 0.6
-    planets_genned = 10
+var SHOWMENU = false
+
+if (canvas.width < 800) {
+    SCALE = 5/3*0.35
+    planets_genned = 30
 }
 
 // Planets
@@ -107,8 +109,8 @@ function createPlanets(n, teams) {
         rad = (25 + Math.random()*50)*SCALE
         var circle = {
             radius: rad, 
-            x: (Math.random() * (canvas.width-rad*1))+rad/2, 
-            y: (Math.random() * (canvas.height-rad*1))+rad/2, 
+            x: (Math.random() * (canvas.width-(rad*5)))+(rad*2.5), //cant seem to get the spacing right XD
+            y: ((Math.random() * (canvas.height-(BARY+canvas.height/20)-rad*1))+rad/2)+(BARY+canvas.height/20), 
             name: 'Circle'+i, 
             team: teamNeutral, 
             color: teamNeutral.color,  
@@ -174,7 +176,15 @@ function checkHit(e) {
     isMouseDown = true; //user selection box
     startX = e.clientX;
     startY = e.clientY;
-
+    
+    // todo: detect menu click 
+    if (xMouse > menuButton.x && xMouse < menuButton.x + menuButton.wid && yMouse > menuButton.y && yMouse < menuButton.y + menuButton.hei) {
+        if (SHOWMENU == false){
+            SHOWMENU = true
+        } else {
+            SHOWMENU = false
+        }
+    }
     for (var i = 0; i < circles.length; i++) {
         var circle = circles[i];
         var distance = Math.sqrt(Math.pow(xMouse - circle.x, 2) + Math.pow(yMouse - circle.y, 2));
@@ -310,8 +320,18 @@ function createUnits(n, team, parent) {
 
 function randomBotTree() {
     randomBot = this;
-    // sees all circles
-    // attacks weakest circles
+    // Parameters:
+        // Strength of circles
+            // Quantity of troops
+            // Strength of circles team
+        // Distance
+        // Placement
+            // Are the neighbours weak or strong?
+    // perhaps quantify each parameter and attack the lowest cumaliative circle
+    
+    // OP bot: multiple targets at once
+    // Perhaps machine learning?
+    
     if (randomBot.target.team == randomBot.team) {
         targetCircles = []
         for (var i = 0; i < circles.length; i++) {
@@ -407,7 +427,7 @@ function drawLeadingBar(teams) {
         ctx.beginPath();
         ctx.lineWidth = 0.001; //0.001 for better veiw of colour
         ctx.fillStyle = teamCols[teamName]
-        
+
         if (c == 1) {
             ctx.arc(canvas.width/4, (endY+startY)/2, (endY-startY)/2, 0, 2 * Math.PI);
         }
@@ -557,7 +577,10 @@ function animationLoop() {
     drawCircle(selectedCircle);
     orbitCircles.forEach(drawOrbitCircle);
     drawLeadingBar(teams);
-    //menuButton();
+    menuButton.draw();
+    if (SHOWMENU == true){
+        menu();
+    }
     
     if (Object.keys(teams).length == 1 && GAMEOVER == false) {
         dbt = 0
@@ -655,21 +678,87 @@ function popUpBox(x, y, width, height, radius) {
 // Start the animation loop
 requestID = requestAnimationFrame(animationLoop);
 
-function menuButton(){
-    var M = canvas.width/100
-    var x = 46*canvas.width/50
-    var y = BARY
-    var wid = canvas.width/30
-    var hei = canvas.height/20
+class MenuButton {
+    constructor(canvas) {
+        this.M = canvas.width/100
+        this.x = 46*canvas.width/50
+        this.y = BARY
+        this.wid = canvas.width/30
+        this.hei = canvas.height/20
+    }
+
+    draw() {
+        popUpBox(this.x, this.y, this.wid, this.hei, 10)
+        ctx.strokeStyle = "RGB(17,120,80)" 
+        ctx.lineWidth = 3
+        for (var i = 1; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(this.x+this.M, BARY+ i *this.hei/4); 
+            ctx.lineTo(this.x+this.wid-this.M, BARY+ i *this.hei/4);
+            ctx.stroke();
+        };  
+        ctx.lineWidth = 0.1
+    }
+}
+
+    
+function menu(){
+    var x = menuButton.x-5*menuButton.wid
+    var y = BARY+3*menuButton.y
+    var wid = menuButton.wid*6   //terribly aligned ;-;
+    var hei = menuButton.hei*6
     popUpBox(x, y, wid, hei, 10)
+    ctx.lineWidth = 3
+    // settings
+    var x = menuButton.x-4*menuButton.wid
+    var y = BARY+4*menuButton.y
+    var wid = menuButton.wid*1.5
+    var hei = menuButton.hei*1.5
+    popUpBox(x, y, wid, hei, 10)
+        // mute music
+        // mute sound effects
+        // increase difficulty
+        // change game speed
+    // pause
+    var x = menuButton.x-menuButton.wid
+    var y = BARY+4*menuButton.y
+    popUpBox(x, y, wid, hei, 10)
+    // help
+    var x = menuButton.x-4*menuButton.wid
+    var y = menuButton.hei*6
+    popUpBox(x, y, wid, hei, 10)
+    // restart
+    var x = menuButton.x-menuButton.wid
+    var y = menuButton.hei*6
+    popUpBox(x, y, wid, hei, 10)
+    //icons:
     ctx.strokeStyle = "RGB(17,120,80)" 
     ctx.lineWidth = 3
-    for (var i = 1; i < 4; i++) {
+    // Pause button
+    for (var i = 4; i < 7; i+=2) {
         ctx.beginPath();
-        ctx.moveTo(x+M, BARY+ i *hei/4); 
-        ctx.lineTo(x+wid-M, BARY+ i *hei/4);
+        ctx.moveTo(menuButton.x-menuButton.wid+(i*(wid)/10), BARY+4*menuButton.y+menuButton.M); 
+        ctx.lineTo(menuButton.x-menuButton.wid+(i*(wid)/10), BARY+4*menuButton.y-menuButton.M+hei);
         ctx.stroke();
     };  
+    // help button
+    ctx.font = canvas.width/30 + "px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "RGB(17,120,80)";
+    ctx.fillText("?", menuButton.x-4*menuButton.wid+wid/2, menuButton.hei*6+3*hei/4);
+    // settings button
+    ctx.font = canvas.width/30 + "px Arial";
+    ctx.textAlign = "centre";
+    ctx.fillStyle = "RGB(17,120,80)";
+    ctx.fillText("⚙️", menuButton.x-4*menuButton.wid+wid/2, BARY+4*menuButton.y+3*hei/4);
+    // restart button
+    ctx.font = canvas.width/30 + "px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "RGB(17,120,80)";
+    ctx.fillText("↻", menuButton.x-menuButton.wid+wid/2, menuButton.hei*6+3*hei/4);
+    
+
+    
     ctx.lineWidth = 0.1
 }
    
@@ -685,19 +774,18 @@ function game(){
     setTimeout(randomBot1.tree.bind(randomBot1), 4000); // randomBot starts playing 
     setTimeout(randomBot2.tree.bind(randomBot2), 5000); // randomBot starts playing 
     setTimeout(randomBot2.tree.bind(randomBot3), 6000); // randomBot starts playing 
-    console.log(42);
     setTimeout(generateTroops, 10000); // Initializes troop generation
     for (var i = 0; i < orbitCircles.length; i++) {
         drawOrbitCircle(orbitCircles[i]);
     } // Initially draws orbiting circles
+    menuButton = new MenuButton(canvas)
     requestID = requestAnimationFrame(animationLoop); // Begins animation loop
 }
 
 game()
 
 //Doin:
-// multiple teams
-// menu button
+// menu buttons 
 
 //non-urgent:
 // select multiple planets - shift click?
@@ -714,7 +802,7 @@ game()
 // graphics for the planets/troops and background
 // GUI for troops data etc (maybe for later with more advanced features)
 // select multiple planets - shift click?
-// If your troops orbit a nonowned planet - you cant control them - bug or feature? (Removed as bug, but would be cool to implement)
+// If your troops orbit a nonowned planet - you cant control them - bug or feature? (Removed as bug, but would be cool to implement (nevermind bug returned; possible feature?))
 // timer? to see if you can win faster?
 // ctx draws so many things seperately - maybe combine the code?
 // be able to lay a roadblock of troops
@@ -722,7 +810,7 @@ game()
 // leaderboard - smooth animation changes
     
 //IDEAS:
-// overlapping circles form one mass (no internal borders and wierd orbit for orbiting circles)
+// Weird shaped planets and orbits
 // moving planets
 // gravity
 // different factions have different orbiting patterns
