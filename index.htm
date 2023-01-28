@@ -3,7 +3,7 @@
 <head>
     <title>Xenolithic Quest</title>
 </head>
-<body>
+<body style="overflow:hidden">
 <canvas id="gameCanvas" width="600" height="600"></canvas>
 <script>
 // Setup
@@ -706,7 +706,7 @@ function menu(){
     var x = menuButton.x-5*menuButton.wid
     var y = BARY+3*menuButton.y
     var wid = menuButton.wid*6   //terribly aligned ;-;
-    var hei = menuButton.hei*6
+    var hei = menuButton.hei*6   *3/2  //(room for entry field)
     popUpBox(x, y, wid, hei, 10)
     ctx.lineWidth = 3
     // settings
@@ -757,6 +757,10 @@ function menu(){
     ctx.fillStyle = "RGB(17,120,80)";
     ctx.fillText("↻", menuButton.x-menuButton.wid+wid/2, menuButton.hei*6+3*hei/4);
     
+    
+    // entry field
+    
+    
 
     
     ctx.lineWidth = 0.1
@@ -786,6 +790,7 @@ game()
 
 //Doin:
 // menu buttons 
+// PVP
 
 //non-urgent:
 // select multiple planets - shift click?
@@ -855,6 +860,7 @@ game()
     //ferret: game progression, clear rules
     
 </script>
+<p style="color: rgb(205,170,178)">Xenolith quest. A game about winning the unwiniable, defeating the undefeatable and conquoring the unconquorable! Xenolith quest is a game where the underdog still stands a change against the oppresive regime of the enemy! Take your stance and lead your team to victory in xenolith quest!!!</p>
 </body>
 </html>
 
