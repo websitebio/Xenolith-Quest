@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Xenolithic Quest</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href=C:\Users\Administrator\Downloads\favicon.ico>
 </head>
 <body style="overflow:hidden">
 <canvas id="gameCanvas" width="600" height="600"></canvas>
@@ -68,11 +68,24 @@ var teams = {
     teamYellow: 0,
     teamGreen: 0,
     teamBlue: 0,
-    teamPurple: 0
+    teamPurple: 0,
+    teamIndigo: 0
 }
+var totalTeams = []
+
+totalTeams.push(teamNeutral);
+totalTeams.push(teamRed);
+totalTeams.push(teamOrange);
+totalTeams.push(teamYellow);    
+totalTeams.push(teamGreen);
+totalTeams.push(teamBlue);
+totalTeams.push(teamPurple);
+totalTeams.push(teamIndigo);
+
 var Player = {
     team: teamGreen
 }
+/*
 var randomBot1 = {
     tree: randomBotTree,
     team: teamRed,
@@ -85,23 +98,36 @@ var randomBot2 = {
 }
 var randomBot3 = {
     tree: randomBotTree,
-    team: teamIndigo,
-    target: {team: teamIndigo} //so target isnt undefined I think
+    team: teamYellow,
+    target: {team: teamYellow} //so target isnt undefined I think
+}*/
+
+bots = []
+for (team of totalTeams) {
+    if (team == Player.team || team == teamNeutral) {
+        continue;
+    }
+    randomBot = {
+        tree: randomBotTree, //soloBotTree
+        team: team,
+        target: {team: team}
+    }
+    bots.push(randomBot)
 }
 var circles = [];
     /*{x: 200, y: 200, radius: 50, name: 'Circle1', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []},
     {x: 50, y: 50, radius: 20, name: 'Circle2', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []},
     {x: 400, y: 400, radius: 70, name: 'Circle3', team: teamNeutral, color: teamNeutral.color, originalBorderWidth: 0.1, troops: []}*/
 var GAMEOVER = false;
-var CONFET = false
-var BARY = canvas.height/35
-var SCALE = 0.35
-var planets_genned = 50
-var SHOWMENU = false
+var CONFET = false;
+var BARY = canvas.height/35;
+var SCALE = 0.25;
+var planets_genned = 42;
+var SHOWMENU = false;
 
 if (canvas.width < 800) {
-    SCALE = 5/2*0.35
-    planets_genned = 20
+    SCALE = 42/15*0.35;
+    planets_genned = 15;
 }
 
 // Planets
@@ -124,13 +150,13 @@ function createPlanets(n, teams) {
             var distance = Math.sqrt(Math.pow(circle.x - circles[i].x, 2) + Math.pow(circle.y - circles[i].y, 2));
             if (distance < circle.radius + circles[i].radius + canvas.width/20) { //so they arn't touching and so theres some distance
                 overlapping = true;
-                break;
+                //break;
             }
-            pad = rad*2
-            //console.log(circle.y, (canvas.height-pad))
+            pad = rad
+            //onsole.log(circle.y, (canvas.height-pad))
             if (circle.x < pad || circle.y < pad || circle.x > canvas.width-pad || circle.y > canvas.height-pad) {
                 overlapping = true;
-                break;
+                //break;
             }   
         }
         if (!overlapping) {
@@ -144,16 +170,18 @@ function createPlanets(n, teams) {
     
 function drawCircle(circle) {
     if(!circle) return;
+    //orbitCircles.troops.length perhaps count # of troops to determine circle size
     ctx.beginPath();
-    ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
+    ctx.arc(circle.x, circle.y, circle.radius+circle.troops.length, 0, 2 * Math.PI);
     ctx.fillStyle = circle.color;
     ctx.fill();
     ctx.lineWidth = circle.borderWidth;
+    /*
     ctx.strokeStyle = "black";
     ctx.font = circle.radius + "px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = "black";
-    ctx.fillText(circle.troops.length, circle.x, circle.y);
+    ctx.fillText(circle.troops.length, circle.x, circle.y);*/
     ctx.stroke();
     ctx.lineWidth = 0.1
 } // Draws circles
@@ -163,8 +191,10 @@ function drawCircle(circle) {
 //canvas.addEventListener("mousedown", checkHit);
 
 var selectedCircle = null;
+var selectedCircles = [];
 var prevSelectedCircle = null;
 var highlight = 0.8; // The ratio of how much darker the selected circle gets
+var doubleClick = false;
     
 var isMouseDown = false; //user selection box stuff incase I ever use it
 var startX, startY, endX, endY;
@@ -197,6 +227,7 @@ function checkHit(e) {
                prevSelectedCircle = selectedCircle
                if (circle === selectedCircle) { // Deselect
                    selectedCircle = null
+                   doubleClick = true
                    break;
                }
                // check if the player clicks on their own team:  if player.team == selectedCircle.team  etc
@@ -204,9 +235,6 @@ function checkHit(e) {
             
                // Selection animation (etc, second planet sends out pulse)
                // generate path between planets, possible needs to intake place in orbit and map a route depending on both planets rotations - chasing algorithm? 
-               
-               
-               
             }
             selectedCircle = circle;
             selectedCircle.originalColor = circle.color;
@@ -220,6 +248,15 @@ function checkHit(e) {
             circles.forEach(drawCircle);
             drawCircle(selectedCircle);
             
+            /*if (doubleClick == true && prevSelectedCircle == selectedCircle){
+                for (var i = 0; i < circles.length; i++){
+                    if (circles[i].team == prevSelectedCircle){
+                        select(circles[i])
+                    }
+                }
+            } else {
+                select(selectedCircle)
+            }*/
             //console.log(selectedCircle.x, selectedCircle.y, "   Canvas:  ", canvas.width, canvas.height, "  Circle rad: ", selectedCircle.radius)
             
             // VVV Changes parent circle for orbit VVV
@@ -314,6 +351,9 @@ function createUnits(n, team, parent) {
         // add the orbit circle to the array    
         orbitCircles.push(orbitCircle);
         orbitCircle.parentCircle.troops.push(orbitCircle);
+        if (typeof orbitCircle == undefined){
+            console.log("This guy:", orbitCircle.ID)
+        }
     }
 } // Creates the little orbiting thingys
 
@@ -327,14 +367,17 @@ function randomBotTree() {
             // Strength of circles team
         // Distance
         // Placement
-            // Are the neighbours weak or strong?
+            // Are it's neighbours weak or strong?
+            // Are there freindly bases around? Inbetween enemy strongholds?
+            // Are there enemy strongholds/strong bases inbetween?
     // perhaps quantify each parameter and attack the lowest cumaliative circle
     
     // OP bot: multiple targets at once
     // Perhaps machine learning?
+    // times weakspot around planet?
     
     if (randomBot.target.team == randomBot.team) {
-        targetCircles = []
+        var targetCircles = []
         for (var i = 0; i < circles.length; i++) {
             if (circles[i].team == randomBot.team) {
                 continue;
@@ -343,7 +386,7 @@ function randomBotTree() {
         }
         if (targetCircles.length != 0) {
         randomBot.target = targetCircles[Math.floor(Math.random() * targetCircles.length)]
-        //console.log("The Random bot is Targetting: ", randomBot.target.name)
+        //onsole.log("The Random bot is Targetting: ", randomBot.target.name)
         } else {
             console.log(circles[0].team.name, " has complete domination")
         }
@@ -366,6 +409,45 @@ function randomBotTree() {
     team: randomBot1.team
 } */// Variable for the target planet for the randomBot 
 // setTimeout(randomBotTree, 5000); // randomBot starts playing 5 seconds after the game loads, and checks its logic every 1.5 seconds
+    
+function soloBotTree(){ // individualistic troops
+    soloBot = this;
+    DistanceWeight = 150;
+    QuantityWeight = 1;
+    var LowestCumalative = 100;
+    // Parameters:
+        // Quantity of troops
+        // Distance
+    // target lowest cumaliative circle
+    
+    for (var i = 0; i < orbitCircles; i++) {
+        orbitCircle = orbitCircles[i];
+        if (orbitCircle.team != this.team){
+            continue;
+        }
+        for (var i = 0; i < circles.length; i++) {
+            if (circles[i].team == randomBot.team) {
+                continue;
+            }
+            var Quantity = circle.troops.length;
+            var Distance = (Math.sqrt(Math.pow(orbitCircle.x - circle.x, 2) + Math.pow(orbitCircle.y - circle.y, 2))/(canvas.width*canvas.height));
+            var Cumalative = Quantity*QuantityWeight + Distance*DistanceWeight
+            if (Cumalative > LowestCumalative) {
+                continue;
+            }
+            LowestCumalative = Cumaltive;
+            orbitCircle.target = circle;
+        }   
+    }
+    //orbitCircle.parentCircle.troops.splice(orbitCircle.parentCircle.troops.indexOf(orbitCircle), 1); 
+    orbitCircle.parentCircle = orbitCircle.target;
+    orbitCircle.movementState = "Transfer";
+    //orbitCircle.orbitRadius = orbitCircle.target.radius + 25;
+    
+    if (GAMEOVER == false){
+        setTimeout(randomBotTree.bind(this), 1500);
+    }
+}
     
     
 
@@ -508,6 +590,8 @@ function animationLoop() {
             }*/
         }
         else if (orbitCircle.movementState === "Transfer") {
+            console.log(orbitCircle.parentCircle)
+            console.log(orbitCircle.parentCircle.x)
             var xDistance = orbitCircle.parentCircle.x - orbitCircle.x;
             var yDistance = orbitCircle.parentCircle.y - orbitCircle.y;
             var distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
@@ -517,7 +601,7 @@ function animationLoop() {
                 if (orbitCircle.parentCircle.team == orbitCircle.team) {
                     orbitCircle.parentCircle.troops.push(orbitCircle)
                 }
-                if (orbitCircle.parentCircle.troops.length === 0) {
+                if (orbitCircle.parentCircle.team != orbitCircle.team) { //orbitCircle.parentCircle.troops.length === 0 (changed out so it only takes 1 troop to destroy a planet)
                     orbitCircle.parentCircle.troops.push(orbitCircle)
                     orbitCircle.parentCircle.team = orbitCircle.team
                     orbitCircle.parentCircle.color = orbitCircle.color
@@ -527,9 +611,9 @@ function animationLoop() {
                     }
                     //orbitCircle.parentCircle.color = orbitCircle.originalColor
                 }
-                if (orbitCircle.parentCircle.team != orbitCircle.team) { // UNTESTED, DONT KNOW IF IT WORKS
+                /*if (orbitCircle.parentCircle.team != orbitCircle.team) { // UNTESTED, DONT KNOW IF IT WORKS might be buggy
                     orbitCircles.splice(orbitCircles.indexOf(orbitCircle.parentCircle.troops.pop()), 1) //removes a fighter 
-                }
+                }*/
                 orbitCircle.movementState = "Orbit"
             } else {
                 // calculate the angle to the destination circle
@@ -557,7 +641,7 @@ function animationLoop() {
             // check if the distance between the two orbiting circles is less than the sum of their radii
             if (distance < orbitCircle1.radius + orbitCircle2.radius) {
                 if (orbitCircle1.team != orbitCircle2.team){
-                    //console.log(orbitCircle1.ID + orbitCircle1.team.name + " is touching " + orbitCircle2.ID + orbitCircle2.team.name);
+                    //onsole.log(orbitCircle1.ID + orbitCircle1.team.name + " is touching " + orbitCircle2.ID + orbitCircle2.team.name);
                     orbitCircles.splice(orbitCircles.indexOf(orbitCircle1), 1);
                     orbitCircles.splice(orbitCircles.indexOf(orbitCircle2), 1);
                     if (orbitCircle1.parentCircle && orbitCircle1.movementState == "Orbit") {
@@ -587,7 +671,7 @@ function animationLoop() {
         dbt = 0
         for (var i = 0; i < circles.length; i++) {
             if (circles[i].team.name != Object.keys(teams)[0]){
-                //console.log(circles[i].team.name, Object.keys(teams)[0])
+                //onsole.log(circles[i].team.name, Object.keys(teams)[0])
                 dbt ++; 
             }
         }
@@ -676,8 +760,6 @@ function popUpBox(x, y, width, height, radius) {
     ctx.fill()
     ctx.stroke();
 } //popUpBox(canvas.width/4, canvas.height/4, canvas.width/3, canvas.height/3)
-// Start the animation loop
-requestID = requestAnimationFrame(animationLoop);
 
 class MenuButton {
     constructor(canvas) {
@@ -785,24 +867,29 @@ function menu(){
     
     ctx.lineWidth = 0.1
 }
-   
 function game(){
+    menuButton = new MenuButton(canvas)
     canvas.addEventListener("mousedown", checkHit);
     createPlanets(planets_genned, 0)
     //createUnits(20, randomBot1.team, circles[0]);
     //createUnits(20, randomBot1.team, circles[1]);
-    createUnits(10, Player.team, circles[1]);
-    createUnits(10, randomBot1.team, circles[2]);
-    createUnits(10, randomBot2.team, circles[3]);
-    createUnits(10, randomBot3.team, circles[4]);
-    setTimeout(randomBot1.tree.bind(randomBot1), 4000); // randomBot starts playing 
-    setTimeout(randomBot2.tree.bind(randomBot2), 5000); // randomBot starts playing 
-    setTimeout(randomBot2.tree.bind(randomBot3), 6000); // randomBot starts playing 
+    createUnits(3, Player.team, circles[0]);
+    for (bot of bots){
+        createUnits(10, bot.team, circles[(bots.indexOf(bot)+1)])
+        setTimeout(bot.tree.bind(bot), 4000)
+    }
+    //bots.forEach(bot => createUnits(10, bots[bot.team], circles[(bot.team+1)]));
+    //createUnits(10, randomBot1.team, circles[2]);
+    //createUnits(10, randomBot2.team, circles[3]);
+    //createUnits(10, randomBot3.team, circles[4]);
+    //bots.forEach(bot => setTimeout(bot.tree.bind(bot), 4000));
+    //setTimeout(randomBot1.tree.bind(randomBot1), 4000); // randomBot starts playing 
+    //setTimeout(randomBot2.tree.bind(randomBot2), 5000); // randomBot starts playing 
+    //setTimeout(randomBot2.tree.bind(randomBot3), 6000); // randomBot starts playing 
     setTimeout(generateTroops, 10000); // Initializes troop generation
     for (var i = 0; i < orbitCircles.length; i++) {
         drawOrbitCircle(orbitCircles[i]);
     } // Initially draws orbiting circles
-    menuButton = new MenuButton(canvas)
     requestID = requestAnimationFrame(animationLoop); // Begins animation loop
 }
 
@@ -833,6 +920,7 @@ game()
 // be able to lay a roadblock of troops
 // on the leaderboard bar - the more planets, the thicker your part
 // leaderboard - smooth animation changes
+// remove numbers from circles and subtraction of orbits - 1 should be enough to take a planet
     
 //IDEAS:
 // Weird shaped planets and orbits
@@ -845,11 +933,14 @@ game()
 // multiplayer
 // elements to make the gameplay more intuitive:
 // level editor (simply just click to place or remove circles, and a button to save and load (and a file that saves/loads))
+// blackholes/objects that suck in nearby troops and cause xenoliths
+// feed troops into circles to make the circles bigger to generate more troops
 
 //Alternate ideas:
 // paper scissors rock styled gameplay
 // Troops combine into bigger troops and you control them individually
 // music themed? etc weakness/attacks timed at a musical beat or themed - especially with pendulumn like motion
+// a custom loadout of skills prior the game etc +20% speed, +10% generation etc
     
 //Player testing questionnaire:
   //Gameplay:
@@ -878,6 +969,7 @@ game()
     //neon:  too many lines, circles scale in size with troops, pause/restart buttons
     //toxify: >2 teams, bigger map, speed items
     //ferret: game progression, clear rules
+    //rikka: performance, the design, milestone/goals, upgrade system, bot is op (its a randombot, how much easier can it get? ;-;), tbs system 
     
 </script>
     <!-- JSON-LD markup generated by Google Structured Data Markup Helper. -->
