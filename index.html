@@ -121,12 +121,12 @@ var circles = [];
 var GAMEOVER = false;
 var CONFET = false;
 var BARY = canvas.height/35;
-var SCALE = 0.25;
-var planets_genned = 42;
+var SCALE = 0.6;
+var planets_genned = 21;
 var SHOWMENU = false;
 
 if (canvas.width < 800) {
-    SCALE = 42/15*0.35;
+    SCALE = 42/15*0.6;
     planets_genned = 15;
 }
 
@@ -152,7 +152,7 @@ function createPlanets(n, teams) {
                 overlapping = true;
                 //break;
             }
-            pad = rad
+            pad = rad*2
             //onsole.log(circle.y, (canvas.height-pad))
             if (circle.x < pad || circle.y < pad || circle.x > canvas.width-pad || circle.y > canvas.height-pad) {
                 overlapping = true;
@@ -172,7 +172,11 @@ function drawCircle(circle) {
     if(!circle) return;
     //orbitCircles.troops.length perhaps count # of troops to determine circle size
     ctx.beginPath();
-    ctx.arc(circle.x, circle.y, circle.radius+circle.troops.length, 0, 2 * Math.PI);
+    if (circle.troops.length > 30) {
+        ctx.arc(circle.x, circle.y, circle.radius+30, 0, 2 * Math.PI);
+    } else {
+        ctx.arc(circle.x, circle.y, circle.radius+circle.troops.length, 0, 2 * Math.PI);
+    }
     ctx.fillStyle = circle.color;
     ctx.fill();
     ctx.lineWidth = circle.borderWidth;
@@ -867,13 +871,22 @@ function menu(){
     
     ctx.lineWidth = 0.1
 }
+    
+function tutorial(){
+    alert("Welcome to XENOLITH QUEST, the game of interplanetary domination!");
+    alert("You are GREEN")
+    alert("How to play: Select one of your circles as well as an enemies circles to launch an attack! You win the game by controlling all of the planets. You gain control of planets by having at least one troop reach an enemies planet to claim it.")
+    alert("Each planet you own generates more troops for you. But be careful, your enemies are countless and are also fighting towards victory!")
+    alert("To BATTLE!!!")
+}
 function game(){
+    tutorial()
     menuButton = new MenuButton(canvas)
     canvas.addEventListener("mousedown", checkHit);
     createPlanets(planets_genned, 0)
     //createUnits(20, randomBot1.team, circles[0]);
     //createUnits(20, randomBot1.team, circles[1]);
-    createUnits(3, Player.team, circles[0]);
+    createUnits(5, Player.team, circles[0]);
     for (bot of bots){
         createUnits(10, bot.team, circles[(bots.indexOf(bot)+1)])
         setTimeout(bot.tree.bind(bot), 4000)
@@ -898,6 +911,8 @@ game()
 //Doin:
 // menu buttons 
 // PVP
+    
+// troops that enter get lost (2 troops per unit of defense??)
 
 //non-urgent:
 // select multiple planets - shift click?
